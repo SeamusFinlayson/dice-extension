@@ -8,13 +8,16 @@ import "simplebar-react/dist/simplebar.min.css";
 import "./fonts/fonts.css";
 import { GlobalStyles } from "./GlobalStyles";
 import { PluginThemeProvider } from "./plugin/PluginThemeProvider";
+import OBR from "@owlbear-rodeo/sdk";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <PluginThemeProvider>
-      <CssBaseline />
-      <GlobalStyles />
-      <App />
-    </PluginThemeProvider>
-  </React.StrictMode>
-);
+OBR.onReady(() => {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+    <React.StrictMode>
+      <PluginThemeProvider>
+        <CssBaseline />
+        <GlobalStyles />
+        <App />
+      </PluginThemeProvider>
+    </React.StrictMode>
+  );
+});
