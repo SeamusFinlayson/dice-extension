@@ -7,83 +7,77 @@ import { useDiceRollStore } from "./dice/store";
 import { useEffect, useMemo, useState } from "react";
 import { DiceRoll } from "./types/DiceRoll";
 import OBR from "@owlbear-rodeo/sdk";
-import {
-  CheckForDiceExtensions,
-  DiceExtensionResponse,
-  RollRequest,
-  RollResult,
-} from "./types/diceProtocol";
-import { Die } from "./types/Die";
 
-const HELLO_CHANNEL = "general.dice.hello";
-const REQUEST_CHANNEL = "rodeo.owlbear.dice.request";
+import { Die } from "./types/Die";
+import { DiceProtocol } from "./types/diceProtocol";
 
 export function App() {
   const rollValues = useDiceRollStore(state => state.rollValues);
   const startRoll = useDiceRollStore(state => state.startRoll);
 
   const [activeRollRequest, setActiveRollRequest] =
-    useState<RollRequest | null>(null);
+    useState<DiceProtocol.RollRequest | null>(null);
+
+  useEffect(() => {
+    const sendConfig = () => {
+      console.log("request received");
+      OBR.broadcast.sendMessage(
+        DiceProtocol.DICE_CLIENT_HELLO_CHANNEL,
+        {
+          rollRequestChannel: DiceProtocol.ROLL_REQUEST_CHANNEL,
+          dieTypes: ["D4", "D6", "D8", "D10", "D12", "D20", "D100"],
+          styles: [
+            { id: "GALAXY", color: "#17191d" },
+            { id: "GEMSTONE", color: "#443554" },
+            { id: "GLASS", color: "#035978" },
+            { id: "IRON", color: "#d3d5db" },
+            { id: "NEBULA", color: "#5c67ac" },
+            { id: "SUNRISE", color: "#6ba7d5" },
+            { id: "SUNSET", color: "#ca3f3a" },
+            { id: "WALNUT", color: "#714c3e" },
+          ],
+          structuredFeatures: ["multiColor"],
+        } as DiceProtocol.DiceRollerConfig,
+        { destination: "LOCAL" }
+      );
+    };
+
+    sendConfig();
+    return OBR.broadcast.onMessage(
+      DiceProtocol.DICE_ROLLER_HELLO_CHANNEL,
+      sendConfig
+    );
+  }, []);
 
   useEffect(
     () =>
-      OBR.broadcast.onMessage(HELLO_CHANNEL, event => {
-        console.log("connection request received");
-        const data = event.data as CheckForDiceExtensions;
-        OBR.broadcast.sendMessage(
-          data.replyChannel,
-          {
-            requestChannel: REQUEST_CHANNEL,
-            dieTypes: ["D4", "D6", "D8", "D10", "D12", "D20", "D100"],
-            styles: [
-              { style: "GALAXY", code: "#17191d" },
-              { style: "GEMSTONE", code: "#443554" },
-              { style: "GLASS", code: "#035978" },
-              { style: "IRON", code: "#d3d5db" },
-              { style: "NEBULA", code: "#5c67ac" },
-              { style: "SUNRISE", code: "#6ba7d5" },
-              { style: "SUNSET", code: "#ca3f3a" },
-              { style: "WALNUT", code: "#714c3e" },
-            ],
-            structuredFeatures: ["multiColor"],
-          } as DiceExtensionResponse,
-          { destination: "LOCAL" }
-        );
-      }),
-    []
-  );
-
-  useEffect(
-    () =>
-      OBR.broadcast.onMessage(REQUEST_CHANNEL, event => {
-        const rollRequest = event.data as RollRequest;
+      OBR.broadcast.onMessage(DiceProtocol.ROLL_REQUEST_CHANNEL, event => {
+        const rollRequest = event.data as DiceProtocol.RollRequest;
         if (activeRollRequest !== null) {
-          console.error(
-            `Roll in progress, request for ${rollRequest.replyChannel} was aborted`
+          throw new Error(
+            `Roll request ${rollRequest.id} was rejected because another roll is in progress.`
           );
-          return;
         }
-        if (rollRequest.type !== "structured") {
-          console.error(`Unstructured roll requests are not supported`);
-          return;
-        }
-        console.log("roll request received");
-        const dice: DiceRoll = {
+        const diceRoll: DiceRoll = {
           dice: rollRequest.dice.map(
             die =>
               ({
                 id: die.id,
-                style: die.style
-                  ? die.style
-                  : rollRequest.style
-                  ? rollRequest.style
+                style: die.styleId
+                  ? die.styleId
+                  : rollRequest.styleId
+                  ? rollRequest.styleId
                   : "GALAXY",
                 type: die.type,
               } as Die)
           ),
-          hidden: rollRequest.hidden,
+          hidden: rollRequest.gmOnly,
+          combination: rollRequest.combination
+            ? rollRequest.combination
+            : "SUM",
+          bonus: rollRequest.bonus ? rollRequest.bonus : 0,
         };
-        startRoll(dice);
+        startRoll(diceRoll);
         OBR.action.open();
         setActiveRollRequest(rollRequest);
       }),
@@ -102,14 +96,17 @@ export function App() {
   useEffect(() => {
     if (finishedRolling && activeRollRequest !== null) {
       const result = Object.entries(rollValues).map(entry => ({
-        [entry[0]]: entry[1],
+        id: entry[0],
+        result: entry[1],
       }));
       OBR.broadcast.sendMessage(
         activeRollRequest.replyChannel,
-        { result, type: "structured" } as RollResult,
         {
-          destination: "LOCAL",
-        }
+          id: activeRollRequest.id,
+          gmOnly: activeRollRequest.gmOnly,
+          result,
+        } as DiceProtocol.RollResult,
+        { destination: "LOCAL" }
       );
 
       setActiveRollRequest(null);
@@ -123,5 +120,27 @@ export function App() {
         <InteractiveTray />
       </Stack>
     </Container>
+  );
+}
+
+function sendDiceRollerConfig() {
+  OBR.broadcast.sendMessage(
+    "general.diceClient.hello",
+    {
+      rollRequestChannel: DiceProtocol.ROLL_REQUEST_CHANNEL,
+      dieTypes: ["D4", "D6", "D8", "D10", "D12", "D20", "D100"],
+      styles: [
+        { id: "GALAXY", color: "#17191d" },
+        { id: "GEMSTONE", color: "#443554" },
+        { id: "GLASS", color: "#035978" },
+        { id: "IRON", color: "#d3d5db" },
+        { id: "NEBULA", color: "#5c67ac" },
+        { id: "SUNRISE", color: "#6ba7d5" },
+        { id: "SUNSET", color: "#ca3f3a" },
+        { id: "WALNUT", color: "#714c3e" },
+      ],
+      structuredFeatures: ["multiColor"],
+    } as DiceProtocol.DiceRollerConfig,
+    { destination: "LOCAL" }
   );
 }

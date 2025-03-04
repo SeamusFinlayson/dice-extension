@@ -111,7 +111,12 @@ export function PopoverTray({
               noWrap
             >
               {player?.name}
-              {finishedRolling && <span> | {finalValue}</span>}
+              {finishedRolling && (
+                <span>
+                  {" "}
+                  {finalValue !== null ? "|" : ""} {finalValue}
+                </span>
+              )}
             </Typography>
           </Paper>
         </ButtonBase>
