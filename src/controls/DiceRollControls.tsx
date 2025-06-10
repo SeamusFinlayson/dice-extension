@@ -23,6 +23,8 @@ import { getDiceToRoll, useDiceControlsStore } from "./store";
 import { DiceType } from "../types/DiceType";
 import { useDiceHistoryStore } from "./history";
 import { Die } from "../types/Die";
+import { getPowerRollTierText } from "../helpers/getPowerRollTierText";
+import { diceSets } from "../sets/diceSets";
 
 const jiggle = keyframes`
 0% { transform: translate(0, 0) rotate(0deg); }
@@ -34,12 +36,12 @@ const jiggle = keyframes`
 
 export function DiceRollControls() {
   const defaultDiceCounts = useDiceControlsStore(
-    (state) => state.defaultDiceCounts
+    state => state.defaultDiceCounts
   );
 
-  const counts = useDiceControlsStore((state) => state.diceCounts);
-  const bonus = useDiceControlsStore((state) => state.diceBonus);
-  const advantage = useDiceControlsStore((state) => state.diceAdvantage);
+  const counts = useDiceControlsStore(state => state.diceCounts);
+  const bonus = useDiceControlsStore(state => state.diceBonus);
+  const advantage = useDiceControlsStore(state => state.diceAdvantage);
   // Is currently the default dice state (all counts 0 and advantage/bonus defaults)
   const isDefault = useMemo(
     () =>
@@ -51,13 +53,13 @@ export function DiceRollControls() {
     [counts, defaultDiceCounts, advantage, bonus]
   );
 
-  const rollValues = useDiceRollStore((state) => state.rollValues);
+  const rollValues = useDiceRollStore(state => state.rollValues);
   const finishedRolling = useMemo(() => {
     const values = Object.values(rollValues);
     if (values.length === 0) {
       return false;
     } else {
-      return values.every((value) => value !== null);
+      return values.every(value => value !== null);
     }
   }, [rollValues]);
 
@@ -83,24 +85,22 @@ export function DiceRollControls() {
 }
 
 function DicePickedControls() {
-  const startRoll = useDiceRollStore((state) => state.startRoll);
+  const startRoll = useDiceRollStore(state => state.startRoll);
 
   const defaultDiceCounts = useDiceControlsStore(
-    (state) => state.defaultDiceCounts
+    state => state.defaultDiceCounts
   );
-  const diceById = useDiceControlsStore((state) => state.diceById);
-  const counts = useDiceControlsStore((state) => state.diceCounts);
-  const hidden = useDiceControlsStore((state) => state.diceHidden);
-  const bonus = useDiceControlsStore((state) => state.diceBonus);
-  const setBonus = useDiceControlsStore((state) => state.setDiceBonus);
-  const advantage = useDiceControlsStore((state) => state.diceAdvantage);
-  const setAdvantage = useDiceControlsStore((state) => state.setDiceAdvantage);
+  const diceById = useDiceControlsStore(state => state.diceById);
+  const counts = useDiceControlsStore(state => state.diceCounts);
+  const hidden = useDiceControlsStore(state => state.diceHidden);
+  const bonus = useDiceControlsStore(state => state.diceBonus);
+  const setBonus = useDiceControlsStore(state => state.setDiceBonus);
+  const advantage = useDiceControlsStore(state => state.diceAdvantage);
+  const setAdvantage = useDiceControlsStore(state => state.setDiceAdvantage);
 
-  const resetDiceCounts = useDiceControlsStore(
-    (state) => state.resetDiceCounts
-  );
+  const resetDiceCounts = useDiceControlsStore(state => state.resetDiceCounts);
 
-  const pushRecentRoll = useDiceHistoryStore((state) => state.pushRecentRoll);
+  const pushRecentRoll = useDiceHistoryStore(state => state.pushRecentRoll);
 
   function handleRoll() {
     if (hasDice && rollPressTime) {
@@ -128,11 +128,9 @@ function DicePickedControls() {
     setAdvantage(null);
   }
 
-  const rollPressTime = useDiceControlsStore(
-    (state) => state.diceRollPressTime
-  );
+  const rollPressTime = useDiceControlsStore(state => state.diceRollPressTime);
   const setRollPressTime = useDiceControlsStore(
-    (state) => state.setDiceRollPressTime
+    state => state.setDiceRollPressTime
   );
 
   function handlePointerDown() {
@@ -255,7 +253,7 @@ function DicePickedControls() {
       >
         <Tooltip title="Clear" disableInteractive>
           <IconButton
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleReset();
             }}
@@ -306,11 +304,11 @@ function DicePickedControls() {
 }
 
 function FinishedRollControls() {
-  const roll = useDiceRollStore((state) => state.roll);
-  const clearRoll = useDiceRollStore((state) => state.clearRoll);
-  const reroll = useDiceRollStore((state) => state.reroll);
+  const roll = useDiceRollStore(state => state.roll);
+  const clearRoll = useDiceRollStore(state => state.clearRoll);
+  const reroll = useDiceRollStore(state => state.reroll);
 
-  const rollValues = useDiceRollStore((state) => state.rollValues);
+  const rollValues = useDiceRollStore(state => state.rollValues);
   const finishedRollValues = useMemo(() => {
     const values: Record<string, number> = {};
     for (const [id, value] of Object.entries(rollValues)) {
@@ -387,6 +385,29 @@ function FinishedRollControls() {
           </Tooltip>
         )}
       </Stack>
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          pointerEvents: "none",
+          padding: 24,
+          alignItems: "center",
+        }}
+      >
+        {roll !== null &&
+          roll.specialRollData &&
+          roll.specialRollData.type === "POWER_ROLL" && (
+            <Typography
+              variant="h6"
+              color="rgba(255, 255, 255, 1)"
+              textAlign="center"
+            >
+              {getPowerRollTierText(roll, rollValues)}
+            </Typography>
+          )}
+      </div>
     </>
   );
 }

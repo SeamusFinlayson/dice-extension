@@ -32,7 +32,7 @@ export function PlayerTray({
 }: {
   player?: Player; // Make player optional to allow for preloading of the tray
 }) {
-  const allowOrbit = useDebugStore((state) => state.allowOrbit);
+  const allowOrbit = useDebugStore(state => state.allowOrbit);
 
   return (
     <Box component="div" position="relative" display="flex">
@@ -82,6 +82,7 @@ export function PlayerTray({
         }}
         component="div"
       >
+        <SpecialRollTypeText player={player} />
         <Typography
           variant="h6"
           color="rgba(255, 255, 255, 0.7)"
@@ -147,6 +148,30 @@ function PlayerTrayResults({ player }: { player?: Player }) {
             </Box>
           </Fade>
         </>
+      )}
+    </>
+  );
+}
+
+function SpecialRollTypeText({ player }: { player?: Player }) {
+  const {
+    specialRollTypeText,
+    diceRoll,
+    finalValue,
+    finishedRollValues,
+    finishedRolling,
+  } = usePlayerDice(player);
+
+  return (
+    <>
+      {finishedRolling && (
+        <Typography
+          variant="h6"
+          color="rgba(255, 255, 255, 1)"
+          textAlign="center"
+        >
+          {specialRollTypeText}
+        </Typography>
       )}
     </>
   );

@@ -5,6 +5,8 @@ import { DiceRoll } from "../types/DiceRoll";
 import { DiceThrow } from "../types/DiceThrow";
 import { DiceTransform } from "../types/DiceTransform";
 import { getPluginId } from "./getPluginId";
+import { DiceProtocol } from "../types/diceProtocol";
+import { getPowerRollTierText } from "../helpers/getPowerRollTierText";
 
 export function usePlayerDice(player?: Player) {
   const diceRoll = useMemo(() => {
@@ -78,9 +80,17 @@ export function usePlayerDice(player?: Player) {
     if (values.length === 0) {
       return false;
     } else {
-      return values.every((value) => value !== null);
+      return values.every(value => value !== null);
     }
   }, [rollValues]);
+
+  const specialRollTypeText = useMemo(() => {
+    if (!finishedRolling || !diceRoll?.specialRollData || !rollValues)
+      return null;
+    if (diceRoll.specialRollData.type === "POWER_ROLL")
+      return getPowerRollTierText(diceRoll, rollValues);
+    return null;
+  }, [finishedRolling, diceRoll]);
 
   return {
     diceRoll,
@@ -92,5 +102,6 @@ export function usePlayerDice(player?: Player) {
     finalValue,
     finishedRollValues,
     finishedRolling,
+    specialRollTypeText,
   };
 }

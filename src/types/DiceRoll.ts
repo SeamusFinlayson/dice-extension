@@ -1,4 +1,5 @@
 import { Dice } from "./Dice";
+import { DiceProtocol } from "./diceProtocol";
 
 /**
  * The roll of a set of dice.
@@ -6,4 +7,8 @@ import { Dice } from "./Dice";
  */
 export interface DiceRoll extends Dice {
   hidden?: boolean;
+  specialRollData?: {
+    type: "POWER_ROLL";
+    netEdges: number;
+  };
 }

@@ -27,8 +27,11 @@ export namespace DiceProtocol {
 
   // Note: Change these two values if you are implementing this protocol in another extension. Comment out the values if you are not using them. The dice extension does not define the result channel and the dice client does not define the roll request channel, so you should only need one of these channels.
 
-  /** Channel where this extension receives roll requests. */
-  export const ROLL_REQUEST_CHANNEL = "rodeo.owlbear.rollRequest";
+  /** Channels where this extension receives roll requests. */
+  export const ROLL_REQUEST_CHANNELS = [
+    "rodeo.owlbear.rollRequest",
+    "rodeo.owlbear.powerRollRequest",
+  ];
   /** Channel where this extension receives roll results. */
   // export const ROLL_RESULT_CHANNEL = "rodeo.owlbear.rollResult";
 
@@ -41,7 +44,7 @@ export namespace DiceProtocol {
     color: string; //
   };
 
-  export type DieType = "D4" | "D6" | "D8" | "D10" | "D20" | "D100";
+  export type DieType = "D4" | "D6" | "D8" | "D10" | "D12" | "D20" | "D100";
 
   export type Die = {
     /** The ID associated with this die's result. */
@@ -65,30 +68,52 @@ export namespace DiceProtocol {
    */
   export type DiceRollerConfig = {
     /** Channel to request rolls from this specific extension. */
-    rollRequestChannel: string;
+    rollRequestChannels: string[];
     dieTypes: DieType[];
     styles: DieStyle[];
   };
 
-  /** Format for messages requesting a dice roll. */
-  export type RollRequest = {
+  /** Properties shared between roll requests that extend this type. */
+  export interface RollRequestBase {
     /** ID of this request. Recommended format `myExtension-${Date.now()}` */
     id: string;
     /** Channel where the dice client can receive the roll result. */
     replyChannel: string;
     /** Prevent rolls from being shown to users without GM access. */
     gmOnly: boolean;
+    /** The style for all dice. This can overridden by setting the styleId for a specific die. If no style is given the default will be used. */
+    styleId?: string;
+  }
+
+  /** Format for messages requesting a dice roll. */
+  export interface RollRequest extends RollRequestBase {
     /** The method of calculating the final value. */
     combination?: "HIGHEST" | "LOWEST" | "SUM" | "NONE";
     /** A value added to the roll result. */
     bonus?: number;
-    /** The style for all dice. This can overridden by setting the styleId for a specific die. If no style is given the default will be used. */
-    styleId?: string;
+    /** Dice to be rolled. */
     dice: Die[];
-  };
+  }
 
   /** Format for messages sent when a roll has been completed. */
   export type RollResult = {
+    /** ID of the request that initiated this roll. */
+    id: string;
+    /** Access requirement given in the request that initiated this roll. */
+    gmOnly: boolean;
+    result: DieResult[];
+  };
+
+  /** Format for messages requesting a power roll. */
+  export interface PowerRollRequest extends RollRequestBase {
+    /** A value added to the roll result. */
+    bonus: number;
+    /** Edges - Banes, see Draw Steel Rules. */
+    netEdges: number;
+  }
+
+  /** Format for messages sent when a power roll has been completed. */
+  export type PowerRollResult = {
     /** ID of the request that initiated this roll. */
     id: string;
     /** Access requirement given in the request that initiated this roll. */

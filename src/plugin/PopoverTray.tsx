@@ -27,8 +27,13 @@ export function PopoverTray({
   onToggle: (connectionId: string, show: boolean) => void;
   onOpen: (connectionId: string) => void;
 }) {
-  const { diceRoll, finalValue, finishedRolling, finishedRollTransforms } =
-    usePlayerDice(player);
+  const {
+    diceRoll,
+    finalValue,
+    finishedRolling,
+    finishedRollTransforms,
+    specialRollTypeText,
+  } = usePlayerDice(player);
 
   const theme = useTheme();
 
@@ -113,8 +118,10 @@ export function PopoverTray({
               {player?.name}
               {finishedRolling && (
                 <span>
-                  {" "}
-                  {finalValue !== null ? "|" : ""} {finalValue}
+                  {finalValue !== null ? ` | ${finalValue}` : ""}
+                  {specialRollTypeText !== null
+                    ? ` | ${specialRollTypeText}`
+                    : ""}
                 </span>
               )}
             </Typography>
