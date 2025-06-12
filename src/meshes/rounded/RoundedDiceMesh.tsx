@@ -8,6 +8,7 @@ import { D20 } from "./D20";
 import { D4 } from "./D4";
 import { D6 } from "./D6";
 import { D8 } from "./D8";
+import { D3 } from "./D3";
 
 type Props = JSX.IntrinsicElements["group"] & { diceType: DiceType };
 
@@ -16,6 +17,8 @@ export const RoundedDiceMesh = React.forwardRef<THREE.Group, Props>(
     switch (diceType) {
       case "D4":
         return <D4 ref={ref} {...props} />;
+      case "D3":
+        return <D3 ref={ref} {...props} />;
       case "D6":
         return <D6 ref={ref} {...props} />;
       case "D8":

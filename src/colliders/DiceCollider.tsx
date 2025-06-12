@@ -10,6 +10,8 @@ export function DiceCollider({ diceType }: { diceType: DiceType }) {
   switch (diceType) {
     case "D4":
       return <D4Collider />;
+    case "D3":
+      return <D6Collider />;
     case "D6":
       return <D6Collider />;
     case "D8":

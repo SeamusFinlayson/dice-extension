@@ -31,6 +31,7 @@ function createStandardSet(style: DiceStyle): DiceSet {
     name: `${style.toLowerCase()} dice`,
     dice: [
       { id: `${id}_D4`, type: "D4", style },
+      { id: `${id}_D3`, type: "D3", style },
       { id: `${id}_D6`, type: "D6", style },
       { id: `${id}_D8`, type: "D8", style },
       { id: `${id}_D10`, type: "D10", style },
