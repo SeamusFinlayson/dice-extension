@@ -7,7 +7,7 @@
   "icon": "/logo.png",
   "description": "Beautiful 3D dice extension with extension integration",
   "action": {
-    "title": "Dice",
+    "title": "Connected Dice",
     "icon": "/icon.svg",
     "popover": "/",
     "height": 700,
